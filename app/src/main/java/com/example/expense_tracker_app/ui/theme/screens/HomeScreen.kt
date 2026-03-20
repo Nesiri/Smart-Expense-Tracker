@@ -17,7 +17,7 @@ fun HomeScreen(){
                  },
         floatingActionButton = {
             Button(onClick = {}) {
-                Text("Add Expense")
+                Text("Edit Expense")
             }
         }
     ){
