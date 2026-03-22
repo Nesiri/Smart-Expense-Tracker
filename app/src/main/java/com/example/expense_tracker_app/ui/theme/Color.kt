@@ -2,6 +2,7 @@ package com.example.expense_tracker_app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+val cardLight =Color(0xFFF5F5F5)
 val primaryLight = Color(0xFF3B608F)
 val onPrimaryLight = Color(0xFFFFFFFF)
 val primaryContainerLight = Color(0xFFD4E3FF)

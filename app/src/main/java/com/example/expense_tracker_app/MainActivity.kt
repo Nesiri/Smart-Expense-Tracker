@@ -6,11 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,9 +15,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.expense_tracker_app.ui.theme.ExpenseTrackerAppTheme
-import com.example.expense_tracker_app.ui.theme.screens.AddScreen
-import com.example.expense_tracker_app.ui.theme.screens.EditScreen
-import com.example.expense_tracker_app.ui.theme.screens.HomeScreen
+import com.example.expense_tracker_app.screens.AddScreen
+import com.example.expense_tracker_app.screens.EditScreen
+import com.example.expense_tracker_app.screens.HomeScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
