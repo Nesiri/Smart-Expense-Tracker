@@ -23,35 +23,22 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import com.example.expense_tracker_app.navigation.Screen
+import com.example.expense_tracker_app.ui.theme.component.AppScaffold
+import com.example.expense_tracker_app.viewModel.HomeViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
-fun AddScreen(navController: NavController){
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Add Expense ")},
-                navigationIcon = {
-                    // Add back button in the top bar
-                    IconButton(onClick = {
-                        navController.popBackStack() // Navigate one step back
-                    }) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                },
-
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        }
-
+fun AddScreen(
+    navController: NavHostController,
+    viewModel: HomeViewModel = viewModel()
+){
+    AppScaffold(
+        navController = navController,
+        title = Screen.Add.title,
     ){
             paddingValues ->
         Column(modifier = Modifier.fillMaxSize()
