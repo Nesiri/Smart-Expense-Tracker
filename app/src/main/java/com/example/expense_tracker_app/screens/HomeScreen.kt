@@ -1,6 +1,5 @@
 package com.example.expense_tracker_app.screens
 
-
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -46,26 +45,38 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.expense_tracker_app.model.Category
+import com.example.expense_tracker_app.model.Expense
 import com.example.expense_tracker_app.navigation.Screen
+import com.example.expense_tracker_app.repository.AppRepository
+
 import com.example.expense_tracker_app.ui.theme.component.AppScaffold
 import com.example.expense_tracker_app.ui.theme.component.showDatePicker
+import com.example.expense_tracker_app.viewModel.ExpenseViewModel
+import com.example.expense_tracker_app.viewModel.ExpenseViewModelFactory
 import com.example.expense_tracker_app.viewModel.HomeViewModel
 
 
 @Composable
 fun HomeScreen(
     navController: NavHostController,
-    viewModel: HomeViewModel = viewModel()
+    appRepository: AppRepository
 ) {
+    // Create ExpenseViewModel with AppRepository
+    val expenseViewModel: ExpenseViewModel = viewModel(
+        factory = ExpenseViewModelFactory(appRepository)
+    )
 
-    val categories by viewModel.categories.collectAsState()
+    val homeViewModel = remember { HomeViewModel(expenseViewModel) }
+
+    val categories by homeViewModel.categories.collectAsState()
+    val expenses by homeViewModel.filteredExpenses.collectAsState(initial = emptyList())
+    val selectedDate by homeViewModel.selectedDate.collectAsState()
+    val total by homeViewModel.totalAmount.collectAsState(initial = 0.0)
+    val planned by homeViewModel.totalPlannedAmount.collectAsState(initial = 0.0)
 
     AppScaffold(
         navController = navController,
         title = Screen.Home.title,
-
-
-
     ) { paddingValues ->
 
         Column(
@@ -74,7 +85,6 @@ fun HomeScreen(
                 .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.tertiary)
         ) {
-
             Text(
                 text = "Categories",
                 modifier = Modifier.fillMaxWidth(),
@@ -100,8 +110,13 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            ExpenseSummaryCard()
-            // Bottom border
+            ExpenseSummaryCard(
+                selectedDate = selectedDate,
+                onDateSelected = { homeViewModel.setDate(it) },
+                total = total,
+                planned = planned
+            )
+
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.tertiary,
                 thickness = 3.dp
@@ -113,29 +128,27 @@ fun HomeScreen(
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
             ) {
+                var selectedDeleteExpense by remember { mutableStateOf<Expense?>(null) }
 
-                val expenses by viewModel.filteredExpenses.collectAsState(initial = emptyList())
-                var selectedDeleteId by remember { mutableStateOf<String?>(null) }
-
-                expenses.forEachIndexed { index, item ->
-                    val id = index.toString()
+                expenses.forEach { expense ->
                     ExpenseItem(
-                        id = id,
-                        title = item.title,
-                        category = item.category,
-                        amount = item.amount,
-                        planned = item.plannedAmount,
-                        description = item.description,
-                        isDeleteMode = selectedDeleteId == id,
-
-                        onEdit = { id ->
+                        id = expense.id.toString(),
+                        title = expense.title,
+                        category = expense.category,
+                        amount = expense.amount,
+                        planned = expense.plannedAmount,
+                        description = expense.description,
+                        isDeleteMode = selectedDeleteExpense?.id == expense.id,
+                        onEdit = {
                             navController.navigate(Screen.Edit.route)
                         },
-
-                        onDelete = { id ->
-                            selectedDeleteId =
-                                if (selectedDeleteId == id) null   // toggle OFF
-                                else id                            // toggle ON
+                        onDelete = {
+                            if (selectedDeleteExpense?.id == expense.id) {
+                                homeViewModel.deleteExpense(expense)
+                                selectedDeleteExpense = null
+                            } else {
+                                selectedDeleteExpense = expense
+                            }
                         }
                     )
                 }
@@ -146,6 +159,69 @@ fun HomeScreen(
     }
 }
 @Composable
+fun ExpenseSummaryCard(
+    selectedDate: String,
+    onDateSelected: (String) -> Unit,
+    total: Double,
+    planned: Double
+) {
+    val context = LocalContext.current
+    val color = if (total <= planned) {
+        Color(0xFF00C853)
+    } else {
+        Color(0xFFD50000)
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFF5F5F5)
+        )
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = selectedDate,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        showDatePicker(context) { date ->
+                            onDateSelected(date)
+                        }
+                    },
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Right
+            )
+
+            Text(
+                "Monthly expense summary",
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "amount : $$total",
+                    color = color,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "plan: $$planned",
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontWeight = FontWeight.Light
+                )
+            }
+        }
+    }
+}
+
+// Keep CategoriesRow, CategoryItem, and ExpenseItem exactly as they are
+@Composable
 fun CategoriesRow(
     categories: List<Category>,
     navController: NavHostController
@@ -154,7 +230,6 @@ fun CategoriesRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         items(categories) { item ->
-
             CategoryItem(
                 title = item.title,
                 icon = item.icon,
@@ -188,9 +263,7 @@ fun CategoryItem(title: String, @DrawableRes icon: Int, onClick: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-
             Spacer(modifier = Modifier.height(6.dp))
-
             Icon(
                 painter = painterResource(id = icon),
                 contentDescription = title,
@@ -199,7 +272,6 @@ fun CategoryItem(title: String, @DrawableRes icon: Int, onClick: () -> Unit) {
                     .size(50.dp)
                     .offset(y = (-3).dp)
             )
-
             Text(
                 text = title,
                 fontSize = 12.sp,
@@ -207,68 +279,6 @@ fun CategoryItem(title: String, @DrawableRes icon: Int, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.padding(bottom = 6.dp)
             )
-        }
-    }
-}
-
-@Composable
-fun ExpenseSummaryCard(
-    viewModel: HomeViewModel = viewModel()
-) {
-    val context = LocalContext.current
-    val selectedDate by viewModel.selectedDate.collectAsState()
-    val total by viewModel.totalAmount.collectAsState(initial = 0.0)
-    val planned by viewModel.totalPlannedAmount.collectAsState(initial = 0.0)
-    val color = if (total <= planned) {
-        Color(0xFF00C853) // GREEN (within budget)
-    } else {
-        Color(0xFFD50000) // RED (over budget)
-    }
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF5F5F5)
-        )
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-
-            Text(
-                text = selectedDate,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        showDatePicker(context) { date ->
-                            viewModel.setDate(date) //  GLOBAL UPDATE
-                        }
-                    },
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Right
-            )
-
-            Text(
-                "Monthly expense summary",
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "amount : $$total",
-                    color =color,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Text(
-                    text = "plan: $$planned",
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    fontWeight = FontWeight.Light
-                )
-            }
         }
     }
 }
@@ -285,7 +295,6 @@ fun ExpenseItem(
     onEdit: (String) -> Unit,
     onDelete: (String) -> Unit
 ) {
-
     val color = if (amount <= planned) {
         Color(0xFF00C853)
     } else {
@@ -298,24 +307,16 @@ fun ExpenseItem(
             .padding(vertical = 4.dp)
             .combinedClickable(
                 onClick = {},
-                onLongClick = {
-                    onDelete(id)   // pass id
-                },
-                onDoubleClick = {
-                    onEdit(id)
-                }
+                onLongClick = { onDelete(id) },
+                onDoubleClick = { onEdit(id) }
             ),
         border = if (isDeleteMode) {
             BorderStroke(2.dp, Color.Red)
         } else null
     ) {
-
         Column(modifier = Modifier.padding(12.dp)) {
-
             Text(category, fontSize = 10.sp)
-
             Text(title, fontWeight = FontWeight.Bold)
-
             Text(description, fontSize = 12.sp)
 
             Row(
@@ -327,7 +328,6 @@ fun ExpenseItem(
                     color = color,
                     fontWeight = FontWeight.Bold
                 )
-
                 Text(
                     "plan: $planned",
                     color = MaterialTheme.colorScheme.primary,
@@ -337,14 +337,10 @@ fun ExpenseItem(
                     Text(
                         text = "🗑",
                         color = Color.Red,
-                        modifier = Modifier.clickable {
-                            onDelete(id)
-                        }
+                        modifier = Modifier.clickable { onDelete(id) }
                     )
                 }
             }
-
-
         }
     }
 }

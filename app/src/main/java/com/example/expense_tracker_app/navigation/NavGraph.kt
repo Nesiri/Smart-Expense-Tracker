@@ -1,20 +1,19 @@
 package com.example.expense_tracker_app.navigation
 
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.expense_tracker_app.repository.AppRepository
 import com.example.expense_tracker_app.screens.AddScreen
 import com.example.expense_tracker_app.screens.CategoryScreen
 import com.example.expense_tracker_app.screens.EditScreen
 import com.example.expense_tracker_app.screens.HomeScreen
 
 @Composable
-fun AppNavGraph(navController: NavHostController) {
+fun AppNavGraph(navController: NavHostController, appRepository: AppRepository) {
 
     NavHost(
         navController = navController,
@@ -22,15 +21,24 @@ fun AppNavGraph(navController: NavHostController) {
     ) {
 
         composable(Screen.Home.route) {
-            HomeScreen(navController)
+            HomeScreen(
+                navController = navController,
+                appRepository = appRepository
+            )
         }
 
         composable(Screen.Add.route) {
-            AddScreen(navController)
+            AddScreen(
+                navController = navController,
+                //appRepository = appRepository
+            )
         }
 
         composable(Screen.Edit.route) {
-            EditScreen(navController)
+            EditScreen(
+                navController = navController,
+               // appRepository = appRepository
+            )
         }
 
         composable(
@@ -47,7 +55,8 @@ fun AppNavGraph(navController: NavHostController) {
 
             CategoryScreen(
                 navController = navController,
-                categoryName = categoryName
+                categoryName = categoryName,
+               // appRepository = appRepository
             )
         }
     }
