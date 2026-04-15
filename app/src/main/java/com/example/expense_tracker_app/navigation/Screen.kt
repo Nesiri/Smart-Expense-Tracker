@@ -14,7 +14,16 @@ sealed class Screen(
         title = "Expense Tracker",
     )
 
-
+    object Add : Screen(
+        route = "add/{categoryName}",
+        title = "Add Expense"
+    ) {
+        fun createRoute(categoryName: String): String {
+            val encoded =
+                URLEncoder.encode(categoryName, StandardCharsets.UTF_8.toString())
+            return "add/$encoded"
+        }
+    }
 
     object Edit : Screen(
         route = "edit/{expenseId}",

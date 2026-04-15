@@ -48,12 +48,10 @@ import com.example.expense_tracker_app.model.Category
 import com.example.expense_tracker_app.model.Expense
 import com.example.expense_tracker_app.navigation.Screen
 import com.example.expense_tracker_app.repository.AppRepository
-
 import com.example.expense_tracker_app.ui.theme.component.AppScaffold
 import com.example.expense_tracker_app.ui.theme.component.showDatePicker
 import com.example.expense_tracker_app.viewModel.HomeViewModel
 import com.example.expense_tracker_app.viewModel.HomeViewModelFactory
-
 
 @Composable
 fun HomeScreen(
@@ -105,56 +103,59 @@ fun HomeScreen(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-           if(!categories.isEmpty()) {
-               ExpenseSummaryCard(
-                   selectedDate = selectedDate,
-                   onDateSelected = { homeViewModel.setDate(it) },
-                   total = total,
-                   planned = planned
-               )
 
-               HorizontalDivider(
-                   color = MaterialTheme.colorScheme.tertiary,
-                   thickness = 3.dp
-               )
+            if (categories.isNotEmpty()) {
+                ExpenseSummaryCard(
+                    selectedDate = selectedDate,
+                    onDateSelected = { homeViewModel.setDate(it) },
+                    total = total,
+                    planned = planned
+                )
 
-               Column(
-                   modifier = Modifier
-                       .fillMaxWidth()
-                       .weight(1f)
-                       .verticalScroll(rememberScrollState())
-               ) {
-                   var selectedDeleteExpense by remember { mutableStateOf<Expense?>(null) }
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.tertiary,
+                    thickness = 3.dp
+                )
 
-                   expenses.forEach { expense ->
-                       ExpenseItem(
-                           id = expense.id.toString(),
-                           title = expense.title,
-                           category = expense.category,
-                           amount = expense.amount,
-                           planned = expense.plannedAmount,
-                           description = expense.description,
-                           navController = navController,
-                           isDeleteMode = selectedDeleteExpense?.id == expense.id,
-                           onEdit = {
-                               navController.navigate(Screen.Edit.route)
-                           },
-                           onDelete = {
-                               if (selectedDeleteExpense?.id == expense.id) {
-                                   homeViewModel.deleteExpense(selectedDeleteExpense!!)
-                                   selectedDeleteExpense = null
-                               } else {
-                                   selectedDeleteExpense = expense
-                               }
-                           }
-                       )
-                   }
-               }
-           }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    var selectedDeleteExpense by remember { mutableStateOf<Expense?>(null) }
+
+                    expenses.forEach { expense ->
+                        ExpenseItem(
+                            id = expense.id.toString(),
+                            title = expense.title,
+                            category = expense.category,
+                            amount = expense.amount,
+                            planned = expense.plannedAmount,
+                            description = expense.description,
+                            navController = navController,
+                            isDeleteMode = selectedDeleteExpense?.id == expense.id,
+                            onEdit = { expenseId ->
+                                navController.navigate(Screen.Edit.createRoute(expenseId.toInt()))
+                            },
+                            onDelete = {
+                                if (selectedDeleteExpense?.id == expense.id) {
+                                    homeViewModel.deleteExpense(selectedDeleteExpense!!)
+                                    selectedDeleteExpense = null
+                                } else {
+                                    selectedDeleteExpense = expense
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(50.dp))
         }
     }
 }
+
 @Composable
 fun ExpenseSummaryCard(
     selectedDate: String,
@@ -217,7 +218,6 @@ fun ExpenseSummaryCard(
     }
 }
 
-// Keep CategoriesRow, CategoryItem, and ExpenseItem exactly as they are
 @Composable
 fun CategoriesRow(
     categories: List<Category>,
@@ -307,8 +307,9 @@ fun ExpenseItem(
                 onClick = {},
                 onLongClick = { onDelete(id) },
                 onDoubleClick = {
-                    if(id.isNotBlank())
-                    navController.navigate(Screen.Edit.createRoute(id.toInt()))
+                    if (id.isNotBlank()) {
+                        onEdit(id)
+                    }
                 }
             ),
         border = if (isDeleteMode) {
