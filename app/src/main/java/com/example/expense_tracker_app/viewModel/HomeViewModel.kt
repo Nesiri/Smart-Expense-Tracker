@@ -2,79 +2,66 @@ package com.example.expense_tracker_app.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.expense_tracker_app.model.Expense
+import com.example.expense_tracker_app.repository.AppRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
-class HomeViewModel(
-    private val expenseViewModel: ExpenseViewModel
-) : ViewModel() {
+class HomeViewModel(private val repository: AppRepository) : ViewModel() {
 
-    // Get expenses from ExpenseViewModel
-    private val _expenses = MutableStateFlow(emptyList<com.example.expense_tracker_app.model.Expense>())
-    val expenses: StateFlow<List<com.example.expense_tracker_app.model.Expense>> = _expenses.asStateFlow()
+    //  Use stateIn for automatic collection
+    val expenses: StateFlow<List<Expense>> = repository.getAllExpenseStream()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
-    // Get categories from ExpenseViewModel
-    private val _categories = MutableStateFlow(emptyList<com.example.expense_tracker_app.model.Category>())
-    val categories: StateFlow<List<com.example.expense_tracker_app.model.Category>> = _categories.asStateFlow()
+    val categories: StateFlow<List<com.example.expense_tracker_app.model.Category>> = repository.getAllCategoryStream()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
-    // GLOBAL SELECTED DATE (STRING FORMAT = SAFE FOR API 24)
+    // GLOBAL SELECTED DATE
     private val calendar = Calendar.getInstance()
     private val _selectedDate = MutableStateFlow(
-        "${calendar.get(Calendar.MONTH) + 1}/" +
-                "${calendar.get(Calendar.YEAR)}"
+        "${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.YEAR)}"
     )
-    val selectedDate = _selectedDate.asStateFlow()
-
-    init {
-        // Collect expenses from ExpenseViewModel
-        expenseViewModel.allExpenses
-            .onEach { expenseList ->
-                _expenses.value = expenseList
-            }
-            .launchIn(viewModelScope)
-
-        // Collect categories from ExpenseViewModel
-        expenseViewModel.allCategories
-            .onEach { categoryList ->
-                _categories.value = categoryList
-            }
-            .launchIn(viewModelScope)
-    }
+    val selectedDate: StateFlow<String> = _selectedDate.asStateFlow()
 
     fun setDate(date: String) {
         _selectedDate.value = date
     }
 
     // FILTERED EXPENSES
-    val filteredExpenses = combine(_expenses, _selectedDate) { expenses, date ->
+    val filteredExpenses = combine(expenses, selectedDate) { expenses, date ->
         expenses.filter { it.date == date }
     }
 
     // TOTAL AMOUNT
-    val totalAmount = combine(_expenses, _selectedDate) { expenses, date ->
+    val totalAmount = combine(expenses, selectedDate) { expenses, date ->
         expenses
             .filter { it.date == date }
             .sumOf { it.amount }
     }
 
-    val totalPlannedAmount = combine(_expenses, _selectedDate) { expenses, date ->
+    // TOTAL PLANNED AMOUNT
+    val totalPlannedAmount = combine(expenses, selectedDate) { expenses, date ->
         expenses
             .filter { it.date == date }
             .sumOf { it.plannedAmount }
     }
-
-    // Delegate delete operation to ExpenseViewModel
-    fun deleteExpense(expense: com.example.expense_tracker_app.model.Expense) {
-        expenseViewModel.deleteExpense(expense)
-    }
-
-    // Delegate update operation to ExpenseViewModel
-    fun updateExpense(expense: com.example.expense_tracker_app.model.Expense) {
-        expenseViewModel.updateExpense(expense)
+    fun deleteExpense(expense: Expense) {
+        viewModelScope.launch {
+            repository.deleteExpense(expense)
+        }
     }
 }

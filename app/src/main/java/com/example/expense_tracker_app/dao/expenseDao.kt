@@ -25,7 +25,16 @@ interface ExpenseDao {
     suspend fun delete(expense: Expense)
 
     @Query("SELECT * FROM expenses WHERE id = :id")
-    fun getExpense(id: Int): Flow<Expense>
+    fun getExpense(id: Int): Flow<Expense?>
+
+    @Query("""
+    SELECT plannedAmount 
+    FROM expenses 
+   WHERE UPPER(category) = UPPER(:categoryName) 
+    ORDER BY date DESC 
+    LIMIT 1
+""")
+    suspend fun getPlannedAmount(categoryName: String): Double?  // ← suspend, not Flow
 
     @Query("SELECT * FROM expenses ORDER BY amount Desc")
     fun getExpenses(): Flow<List<Expense>>

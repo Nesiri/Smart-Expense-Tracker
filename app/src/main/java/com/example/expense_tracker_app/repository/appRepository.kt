@@ -12,7 +12,8 @@ interface AppRepository {
     suspend fun insertExpenses(expenses: List<Expense>)
     suspend fun deleteExpense(expense: Expense)
     suspend fun updateExpense(expense: Expense)
-
     // Category operations
     fun getAllCategoryStream(): Flow<List<Category>>
+    suspend fun getPlannedAmount(categoryName: String): Double?  // ← suspend
+
 }
