@@ -20,10 +20,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.expense_tracker_app.navigation.Screen
@@ -49,6 +53,9 @@ fun AddScreen(
     val plannedAmount by viewModel.plannedAmount.collectAsState()
     val date by viewModel.date.collectAsState()
     val note by viewModel.note.collectAsState()
+
+    var amountError by remember { mutableStateOf(false) }
+    var categoryError by remember { mutableStateOf(false) }
 
     LaunchedEffect(categoryName) {
         viewModel.onCategoryChange(categoryName)
@@ -82,18 +89,32 @@ fun AddScreen(
         ) {
             OutlinedTextField(
                 value = amount,
-                onValueChange = { viewModel.onAmountChange(it) },
+                onValueChange = {
+                    viewModel.onAmountChange(it)
+                    amountError = false
+                },
                 label = { Text("Amount") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                isError = amountError,
+                supportingText = {
+                    if (amountError) Text("Amount is required", color = Color.Red, fontSize = 12.sp)
+                }
             )
 
             OutlinedTextField(
                 value = category,
-                onValueChange = { viewModel.onCategoryChange(it) },
+                onValueChange = {
+                    viewModel.onCategoryChange(it)
+                    categoryError = false
+                },
                 label = { Text("Category") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                isError = categoryError,
+                supportingText = {
+                    if (categoryError) Text("Category is required", color = Color.Red, fontSize = 12.sp)
+                }
             )
 
             OutlinedTextField(
@@ -121,15 +142,20 @@ fun AddScreen(
 
             Button(
                 onClick = {
-                    viewModel.saveExpense(
-                        title = category,
-                        category = category,
-                        amount = amount.toDoubleOrNull() ?: 0.0,
-                        plannedAmount = plannedAmount,
-                        description = note,
-                        date = date
-                    )
-                    navController.popBackStack()
+                    amountError = amount.isBlank() || amount.toDoubleOrNull() == null
+                    categoryError = category.isBlank()
+
+                    if (!amountError && !categoryError) {
+                        viewModel.saveExpense(
+                            title = category,
+                            category = category,
+                            amount = amount.toDoubleOrNull() ?: 0.0,
+                            plannedAmount = plannedAmount,
+                            description = note,
+                            date = date
+                        )
+                        navController.popBackStack()
+                    }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
