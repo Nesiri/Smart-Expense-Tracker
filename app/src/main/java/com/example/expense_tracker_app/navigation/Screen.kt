@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets
 sealed class Screen(
     val route: String,
     val title: String,
-    val showFab: Boolean = false
+
 ) {
 
     object Home : Screen(
@@ -14,15 +14,16 @@ sealed class Screen(
         title = "Expense Tracker",
     )
 
-    object Add : Screen(
-        route = "add",
-        title = "Add Expense"
-    )
+
 
     object Edit : Screen(
-        route = "edit",
+        route = "edit/{expenseId}",
         title = "Edit Expense"
-    )
+    ) {
+        fun createRoute(expenseId: Int): String {
+            return "edit/$expenseId"
+        }
+    }
 
     object Category : Screen(
         route = "category/{categoryName}",

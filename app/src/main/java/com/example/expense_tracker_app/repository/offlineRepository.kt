@@ -23,7 +23,6 @@ class OfflineRepository(
         expenseDao.insertExpenses(expenses)
 
 
-
     override suspend fun deleteExpense(expense: Expense) =
         expenseDao.delete(expense)
 
@@ -32,4 +31,10 @@ class OfflineRepository(
 
     override fun getAllCategoryStream() =
         categoryDao.getAllCategories()
+
+    //  Now this matches the interface - suspend function
+    override suspend fun getPlannedAmount(categoryName: String): Double? =
+        expenseDao.getPlannedAmount(categoryName)  // Direct call, no Flow
+
+
 }
