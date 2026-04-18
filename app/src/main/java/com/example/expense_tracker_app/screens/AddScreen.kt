@@ -2,40 +2,26 @@ package com.example.expense_tracker_app.screens
 
 import android.app.DatePickerDialog
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.expense_tracker_app.navigation.Screen
 import com.example.expense_tracker_app.repository.AppRepository
 import com.example.expense_tracker_app.ui.theme.component.AppScaffold
 import com.example.expense_tracker_app.viewModel.ExpenseViewModel
 import com.example.expense_tracker_app.viewModel.ExpenseViewModelFactory
-import java.util.Calendar
+import java.util.*
 
 @Composable
 fun AddScreen(
@@ -48,119 +34,129 @@ fun AddScreen(
         factory = ExpenseViewModelFactory(appRepository)
     )
 
+    // Collect StateFlow values
+    val title by viewModel.title.collectAsState()
     val amount by viewModel.amount.collectAsState()
-    val category by viewModel.category.collectAsState()
     val plannedAmount by viewModel.plannedAmount.collectAsState()
     val date by viewModel.date.collectAsState()
     val note by viewModel.note.collectAsState()
 
-    var amountError by remember { mutableStateOf(false) }
-    var categoryError by remember { mutableStateOf(false) }
-
+    // Auto-load planned amount whenever category name changes
     LaunchedEffect(categoryName) {
-        viewModel.onCategoryChange(categoryName)
         viewModel.loadPlannedAmount(categoryName)
     }
 
     val calendar = Calendar.getInstance()
-    val datePickerDialog = remember {
-        DatePickerDialog(
-            context,
-            { _, year, month, _ ->
-                viewModel.onDateChange(year, month)
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-    }
+
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _, year, month, _ ->
+            viewModel.onDateChange(year, month)
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
 
     AppScaffold(
         navController = navController,
-        title = Screen.Add.title,
+        title = "Add Expense",
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.tertiary)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(16.dp)
+                .background(MaterialTheme.colorScheme.background)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Text(text = "Title")
+            OutlinedTextField(
+                value = title,
+                onValueChange = { viewModel.onTitleChange(it) },
+                modifier = Modifier.fillMaxWidth().testTag("title_input"),
+                shape = RoundedCornerShape(8.dp)
+            )
+
+            Text(text = "Amount")
             OutlinedTextField(
                 value = amount,
-                onValueChange = {
-                    viewModel.onAmountChange(it)
-                    amountError = false
-                },
-                label = { Text("Amount") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                isError = amountError,
-                supportingText = {
-                    if (amountError) Text("Amount is required", color = Color.Red, fontSize = 12.sp)
-                }
+                onValueChange = { viewModel.onAmountChange(it) },
+                modifier = Modifier.fillMaxWidth().testTag("amount_input"),
+                shape = RoundedCornerShape(8.dp)
             )
 
+            Text(text = "Category")
             OutlinedTextField(
-                value = category,
-                onValueChange = {
-                    viewModel.onCategoryChange(it)
-                    categoryError = false
-                },
-                label = { Text("Category") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                isError = categoryError,
-                supportingText = {
-                    if (categoryError) Text("Category is required", color = Color.Red, fontSize = 12.sp)
-                }
+                value = categoryName,
+                onValueChange = {},
+                readOnly = true,
+                modifier = Modifier.fillMaxWidth().testTag("category_display"),
+                shape = RoundedCornerShape(8.dp)
             )
 
+            Text(text = "Planned Amount")
+            OutlinedTextField(
+                value = plannedAmount.toString(),
+                onValueChange = { viewModel.onPlannedAmountChange(it) },
+                modifier = Modifier.fillMaxWidth().testTag("planned_amount_input"),
+                shape = RoundedCornerShape(8.dp),
+            )
+
+            Text(text = "Date")
             OutlinedTextField(
                 value = date,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Date") },
-                placeholder = { Text("MM/DD/YYYY") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().testTag("date_display"),
+                placeholder = { Text("M/YYYY") },
                 trailingIcon = {
                     IconButton(onClick = { datePickerDialog.show() }) {
-                        Icon(Icons.Default.DateRange, contentDescription = "Pick date")
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Select Date"
+                        )
                     }
-                }
+                },
+                shape = RoundedCornerShape(8.dp)
             )
 
+            Text(text = "Note")
             OutlinedTextField(
                 value = note,
                 onValueChange = { viewModel.onNoteChange(it) },
-                label = { Text("Note") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .testTag("note_input"),
+                shape = RoundedCornerShape(8.dp)
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
-                    amountError = amount.isBlank() || amount.toDoubleOrNull() == null
-                    categoryError = category.isBlank()
+                    val amountValue = amount.toDoubleOrNull() ?: 0.0
 
-                    if (!amountError && !categoryError) {
-                        viewModel.saveExpense(
-                            title = category,
-                            category = category,
-                            amount = amount.toDoubleOrNull() ?: 0.0,
-                            plannedAmount = plannedAmount,
-                            description = note,
-                            date = date
-                        )
-                        navController.popBackStack()
-                    }
+                    viewModel.saveExpense(
+                        title = title,
+                        category = categoryName,
+                        amount = amountValue,
+                        plannedAmount = plannedAmount,
+                        description = note,
+                        date = date
+                    )
+
+                    navController.popBackStack()
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().testTag("add_expense_button"),
+                shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Save Expense")
+                Text("Add Expense")
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

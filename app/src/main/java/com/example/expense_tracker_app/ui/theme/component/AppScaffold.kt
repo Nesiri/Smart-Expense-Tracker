@@ -10,6 +10,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.navigation.NavHostController
 import com.example.expense_tracker_app.navigation.Screen
 
@@ -28,7 +30,12 @@ fun AppScaffold(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(title) },
+                title = { 
+                    Text(
+                        text = title,
+                        modifier = Modifier.testTag("scaffold_title")
+                    ) 
+                },
                 //  BACK BUTTON ONLY IF NOT HOME
                 navigationIcon = {
                     if (!isHome) {

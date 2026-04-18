@@ -34,19 +34,32 @@ abstract class ExpenseDatabase : RoomDatabase() {
                     context.applicationContext,
                     ExpenseDatabase::class.java,
                     "expense_database"
-                ) .addCallback(object : Callback() {
+                ).addCallback(object : Callback() {
+                    override fun onCreate(db: SupportSQLiteDatabase) {
+                        super.onCreate(db)
+                        // Seed database on creation
+                        INSTANCE?.let { database ->
+                            CoroutineScope(Dispatchers.IO).launch {
+                                database.categoryDao().insertCategories(categories)
+                            }
+                        }
+                    }
+                    
                     override fun onOpen(db: SupportSQLiteDatabase) {
                         super.onOpen(db)
-                        CoroutineScope(Dispatchers.IO).launch {
-                            val dao = getDatabase(context).categoryDao()
-                            val count = dao.getCount() // you need a DAO query to count rows
-                            if (count == 0) {
-                                dao.insertCategories(categories)
+                        // Ensure categories exist every time (optional, but safer for tests)
+                        INSTANCE?.let { database ->
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val dao = database.categoryDao()
+                                if (dao.getCount() == 0) {
+                                    dao.insertCategories(categories)
+                                }
                             }
                         }
                     }
                 })
-                    .build()
+                .fallbackToDestructiveMigration()
+                .build()
 
                 INSTANCE = instance
                 instance
