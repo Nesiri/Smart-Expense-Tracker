@@ -1,6 +1,11 @@
 package com.example.expense_tracker_app.screens
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -309,6 +314,7 @@ fun ExpenseItem(
             .testTag("expense_item_$title")
             .fillMaxWidth()
             .padding(vertical = 4.dp)
+            .animateContentSize(animationSpec = tween(300))
             .combinedClickable(
                 onClick = {},
                 onLongClick = { onDelete(id) },
@@ -341,7 +347,11 @@ fun ExpenseItem(
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Light
                 )
-                if (isDeleteMode) {
+                AnimatedVisibility(
+                    visible = isDeleteMode,
+                    enter = fadeIn(animationSpec = tween(200)),
+                    exit = fadeOut(animationSpec = tween(200))
+                ) {
                     Text(
                         text = "🗑",
                         color = Color.Red,

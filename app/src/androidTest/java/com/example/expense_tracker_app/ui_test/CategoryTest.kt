@@ -21,5 +21,10 @@ class CategoryScreenInstrumentedTest {
         rule.onNodeWithText("Categories").assertExists()
     }
 
+    @Test
+    fun clickingCategoryOpensAddScreen() {
+        rule.onNodeWithText("Groceries").performClick()
+        rule.onNodeWithText("Add Expense").assertExists()
+    }
 
 }
