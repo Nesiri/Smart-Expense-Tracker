@@ -56,10 +56,12 @@ fun AddScreen(
 
     var amountError by remember { mutableStateOf(false) }
     var categoryError by remember { mutableStateOf(false) }
+    var plannedAmountInput by remember { mutableStateOf("") }
 
     LaunchedEffect(categoryName) {
         viewModel.onCategoryChange(categoryName)
         viewModel.loadPlannedAmount(categoryName)
+        plannedAmountInput = if (plannedAmount > 0.0) plannedAmount.toString() else ""
     }
 
     val calendar = Calendar.getInstance()
@@ -115,6 +117,17 @@ fun AddScreen(
                 supportingText = {
                     if (categoryError) Text("Category is required", color = Color.Red, fontSize = 12.sp)
                 }
+            )
+
+            OutlinedTextField(
+                value = plannedAmountInput,
+                onValueChange = {
+                    plannedAmountInput = it
+                    viewModel.onPlannedAmountChange(it)
+                },
+                label = { Text("Planned Amount") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
             )
 
             OutlinedTextField(

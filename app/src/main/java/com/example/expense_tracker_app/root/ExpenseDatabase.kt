@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Expense::class, Category::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class ExpenseDatabase : RoomDatabase() {
@@ -34,7 +34,9 @@ abstract class ExpenseDatabase : RoomDatabase() {
                     context.applicationContext,
                     ExpenseDatabase::class.java,
                     "expense_database"
-                ) .addCallback(object : Callback() {
+                )
+                    .fallbackToDestructiveMigration()
+                    .addCallback(object : Callback() {
                     override fun onOpen(db: SupportSQLiteDatabase) {
                         super.onOpen(db)
                         CoroutineScope(Dispatchers.IO).launch {
