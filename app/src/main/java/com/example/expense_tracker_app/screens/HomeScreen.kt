@@ -2,6 +2,7 @@ package com.example.expense_tracker_app.screens
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -37,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -224,6 +226,7 @@ fun CategoriesRow(
     navController: NavHostController
 ) {
     LazyRow(
+        modifier = Modifier.testTag("categories_row"),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         items(categories) { item ->
@@ -246,6 +249,7 @@ fun CategoriesRow(
 fun CategoryItem(title: String, @DrawableRes icon: Int, onClick: () -> Unit) {
     Box(
         modifier = Modifier
+            .testTag("category_$title")
             .clickable { onClick() }
             .padding(horizontal = 5.dp)
             .size(100.dp)
@@ -280,6 +284,7 @@ fun CategoryItem(title: String, @DrawableRes icon: Int, onClick: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ExpenseItem(
     id: String,
@@ -301,6 +306,7 @@ fun ExpenseItem(
 
     Card(
         modifier = Modifier
+            .testTag("expense_item_$title")
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .combinedClickable(
