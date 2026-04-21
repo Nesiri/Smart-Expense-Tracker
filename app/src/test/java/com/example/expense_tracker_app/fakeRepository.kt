@@ -65,6 +65,10 @@ class FakeAppRepository : AppRepository {
             .sumOf { it.plannedAmount }
     }
 
+    override fun getExpensesByCategory(categoryName: String): Flow<List<Expense>> {
+        return flowOf(fakeExpenses.filter { it.category.equals(categoryName, ignoreCase = true) })
+    }
+
     //  Test helper only
     fun addExpense(expense: Expense) {
         fakeExpenses.add(expense)

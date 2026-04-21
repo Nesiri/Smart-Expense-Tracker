@@ -38,4 +38,7 @@ interface ExpenseDao {
 
     @Query("SELECT * FROM expenses ORDER BY amount Desc")
     fun getExpenses(): Flow<List<Expense>>
+
+    @Query("SELECT * FROM expenses WHERE UPPER(category) = UPPER(:categoryName) ORDER BY date DESC")
+    fun getExpensesByCategory(categoryName: String): Flow<List<Expense>>
 }

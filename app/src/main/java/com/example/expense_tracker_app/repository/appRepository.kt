@@ -15,5 +15,6 @@ interface AppRepository {
     // Category operations
     fun getAllCategoryStream(): Flow<List<Category>>
     suspend fun getPlannedAmount(categoryName: String): Double?  // ← suspend
+    fun getExpensesByCategory(categoryName: String): Flow<List<Expense>>
 
 }

@@ -8,7 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.expense_tracker_app.repository.AppRepository
 import com.example.expense_tracker_app.screens.AddScreen
-
+import com.example.expense_tracker_app.screens.CategoryScreen
 import com.example.expense_tracker_app.screens.EditScreen
 import com.example.expense_tracker_app.screens.HomeScreen
 
@@ -27,7 +27,17 @@ fun AppNavGraph(navController: NavHostController, appRepository: AppRepository) 
             )
         }
 
-
+        composable(
+            route = Screen.Add.route,
+            arguments = listOf(navArgument("categoryName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
+            AddScreen(
+                navController = navController,
+                categoryName = categoryName,
+                appRepository = appRepository
+            )
+        }
 
         composable(
             route = Screen.Edit.route,
@@ -43,17 +53,10 @@ fun AppNavGraph(navController: NavHostController, appRepository: AppRepository) 
 
         composable(
             route = Screen.Category.route,
-            arguments = listOf(
-                navArgument("categoryName") {
-                    type = NavType.StringType
-                }
-            )
+            arguments = listOf(navArgument("categoryName") { type = NavType.StringType })
         ) { backStackEntry ->
-
-            val categoryName =
-                backStackEntry.arguments?.getString("categoryName") ?: ""
-
-            AddScreen(
+            val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
+            CategoryScreen(
                 navController = navController,
                 categoryName = categoryName,
                 appRepository = appRepository

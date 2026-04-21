@@ -36,5 +36,8 @@ class OfflineRepository(
     override suspend fun getPlannedAmount(categoryName: String): Double? =
         expenseDao.getPlannedAmount(categoryName)  // Direct call, no Flow
 
+    override fun getExpensesByCategory(categoryName: String): Flow<List<Expense>> =
+        expenseDao.getExpensesByCategory(categoryName)
+
 
 }

@@ -268,6 +268,7 @@ fun ExpenseTrackerAppTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = AppTypography,
+        shapes = AppShapes,
         content = content
     )
 }
